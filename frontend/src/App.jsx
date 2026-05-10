@@ -3,7 +3,8 @@ import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 
 const API =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  import.meta.env.VITE_API_URL ||
+  "https://team-task-manager-nvvf.onrender.com/api";
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
@@ -19,9 +20,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-700 via-purple-700 to-pink-600 flex flex-col items-center justify-center text-white px-4">
       <div className="bg-white/15 backdrop-blur-md p-10 rounded-3xl shadow-2xl text-center max-w-3xl border border-white/20">
-        <h1 className="text-5xl font-bold mb-4">
-          🚀 Team Task Manager
-        </h1>
+        <h1 className="text-5xl font-bold mb-4">🚀 Team Task Manager</h1>
 
         <p className="text-lg mb-8 text-white/90">
           Manage projects, assign tasks, track progress and collaborate with
@@ -61,7 +60,6 @@ function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
       alert("Login Success");
-
       window.location.href = "/dashboard";
     } catch (err) {
       alert(err.response?.data?.message || "Login Failed");
@@ -82,6 +80,7 @@ function Login() {
         <input
           className="w-full border border-gray-300 p-3 rounded-xl mb-4"
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
@@ -89,6 +88,7 @@ function Login() {
           className="w-full border border-gray-300 p-3 rounded-xl mb-4"
           type="password"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
@@ -117,7 +117,6 @@ function Register() {
       });
 
       alert("Registration Successful");
-
       window.location.href = "/login";
     } catch (err) {
       alert(err.response?.data?.message || "Registration Failed");
@@ -138,12 +137,14 @@ function Register() {
         <input
           className="w-full border border-gray-300 p-3 rounded-xl mb-4"
           placeholder="Name"
+          value={name}
           onChange={(e) => setName(e.target.value)}
         />
 
         <input
           className="w-full border border-gray-300 p-3 rounded-xl mb-4"
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
@@ -151,6 +152,7 @@ function Register() {
           className="w-full border border-gray-300 p-3 rounded-xl mb-4"
           type="password"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
@@ -176,11 +178,7 @@ function Dashboard() {
 
   const fetchTasks = async () => {
     try {
-      const res = await axios.get(
-        `${API}/tasks`,
-        getAuthHeaders()
-      );
-
+      const res = await axios.get(`${API}/tasks`, getAuthHeaders());
       setTasks(res.data);
     } catch (err) {
       console.log(err);
@@ -193,13 +191,24 @@ function Dashboard() {
     try {
       await axios.post(
         `${API}/tasks`,
-        {
-          title,
-        },
+        { title },
         getAuthHeaders()
       );
 
       setTitle("");
+      fetchTasks();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const completeTask = async (id) => {
+    try {
+      await axios.put(
+        `${API}/tasks/${id}`,
+        { status: "Completed" },
+        getAuthHeaders()
+      );
 
       fetchTasks();
     } catch (err) {
@@ -207,10 +216,17 @@ function Dashboard() {
     }
   };
 
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`${API}/tasks/${id}`, getAuthHeaders());
+      fetchTasks();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const completedTasks = useMemo(() => {
-    return tasks.filter(
-      (task) => task.status === "Completed"
-    ).length;
+    return tasks.filter((task) => task.status === "Completed").length;
   }, [tasks]);
 
   const logout = () => {
@@ -222,19 +238,13 @@ function Dashboard() {
     <div className="min-h-screen bg-slate-100">
       <div className="flex">
         <aside className="w-72 min-h-screen bg-slate-900 text-white p-6 hidden md:block">
-          <h2 className="text-3xl font-black mb-8">
-            ⚡ TaskFlow
-          </h2>
+          <h2 className="text-3xl font-black mb-8">⚡ TaskFlow</h2>
 
           <div className="space-y-3">
-            <div className="bg-blue-600 p-4 rounded-2xl">
-              📊 Dashboard
-            </div>
-
+            <div className="bg-blue-600 p-4 rounded-2xl">📊 Dashboard</div>
             <div className="hover:bg-slate-800 p-4 rounded-2xl cursor-pointer">
               ✅ Tasks
             </div>
-
             <div className="hover:bg-slate-800 p-4 rounded-2xl cursor-pointer">
               👥 Team
             </div>
@@ -253,38 +263,22 @@ function Dashboard() {
             <h1 className="text-4xl font-black text-slate-800">
               Welcome, {user?.name} 👋
             </h1>
-
-            <p className="text-slate-500 mt-2">
-              Role: {user?.role}
-            </p>
+            <p className="text-slate-500 mt-2">Role: {user?.role}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
             <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-6 rounded-3xl shadow-xl">
-              <h3 className="text-lg font-bold">
-                Total Tasks
-              </h3>
-
-              <p className="text-5xl font-black mt-3">
-                {tasks.length}
-              </p>
+              <h3 className="text-lg font-bold">Total Tasks</h3>
+              <p className="text-5xl font-black mt-3">{tasks.length}</p>
             </div>
 
             <div className="bg-gradient-to-r from-green-500 to-green-700 text-white p-6 rounded-3xl shadow-xl">
-              <h3 className="text-lg font-bold">
-                Completed
-              </h3>
-
-              <p className="text-5xl font-black mt-3">
-                {completedTasks}
-              </p>
+              <h3 className="text-lg font-bold">Completed</h3>
+              <p className="text-5xl font-black mt-3">{completedTasks}</p>
             </div>
 
             <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-6 rounded-3xl shadow-xl">
-              <h3 className="text-lg font-bold">
-                Pending
-              </h3>
-
+              <h3 className="text-lg font-bold">Pending</h3>
               <p className="text-5xl font-black mt-3">
                 {tasks.length - completedTasks}
               </p>
@@ -292,9 +286,7 @@ function Dashboard() {
           </div>
 
           <div className="bg-white rounded-3xl shadow-xl p-6 mb-6">
-            <h2 className="text-2xl font-black mb-4">
-              ➕ Create Task
-            </h2>
+            <h2 className="text-2xl font-black mb-4">➕ Create Task</h2>
 
             <div className="flex flex-col md:flex-row gap-4">
               <input
@@ -314,9 +306,7 @@ function Dashboard() {
           </div>
 
           <div className="bg-white rounded-3xl shadow-xl p-6">
-            <h2 className="text-2xl font-black mb-4">
-              📋 Task List
-            </h2>
+            <h2 className="text-2xl font-black mb-4">📋 Task List</h2>
 
             <div className="space-y-4">
               {tasks.map((task) => (
@@ -325,20 +315,25 @@ function Dashboard() {
                   className="border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row md:items-center md:justify-between"
                 >
                   <div>
-                    <h3 className="text-xl font-bold">
-                      {task.title}
-                    </h3>
-
-                    <p className="text-slate-500 mt-1">
-                      {task.status}
-                    </p>
+                    <h3 className="text-xl font-bold">{task.title}</h3>
+                    <p className="text-slate-500 mt-1">{task.status}</p>
                   </div>
 
-                  <button
-                    className="mt-3 md:mt-0 bg-green-600 text-white px-5 py-2 rounded-xl"
-                  >
-                    Complete
-                  </button>
+                  <div className="flex gap-3 mt-3 md:mt-0">
+                    <button
+                      onClick={() => completeTask(task._id)}
+                      className="bg-green-600 text-white px-5 py-2 rounded-xl"
+                    >
+                      Complete
+                    </button>
+
+                    <button
+                      onClick={() => deleteTask(task._id)}
+                      className="bg-red-600 text-white px-5 py-2 rounded-xl"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -354,11 +349,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
-
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
